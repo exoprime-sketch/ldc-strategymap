@@ -1,11 +1,11 @@
 {
-  "name": "개도국 협력 전략지도",
-  "short_name": "전략지도",
-  "description": "개도국 기후기술 협력 후보를 공식 근거 링크와 함께 검토하는 공개형 지도 플랫폼",
-  "start_url": "/",
+  "name": "개도국 기후기술 전략 데이터 플랫폼",
+  "short_name": "Climate Strategy",
+  "description": "개도국 국제협력 사전기획과 전략 스크리닝을 위한 지도형 데이터 플랫폼",
+  "start_url": "/?view=platform",
   "display": "standalone",
-  "background_color": "#eef3f6",
-  "theme_color": "#007a53",
+  "background_color": "#020617",
+  "theme_color": "#020617",
   "lang": "ko",
   "icons": [
     {
