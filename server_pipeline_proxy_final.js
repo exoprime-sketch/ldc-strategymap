@@ -20,35 +20,6 @@ const app = express();
 const PORT = Number(process.env.PORT || 3001);
 const cache = new Map();
 const now = () => new Date().toISOString();
-const MAX_QUERY_LENGTH = 120;
-const MAX_CACHE_ITEMS = Number(process.env.PROXY_MAX_CACHE_ITEMS || 200);
-const PROXY_TIMEOUT_MS = Number(process.env.PROXY_TIMEOUT_MS || 12000);
-
-function sanitizeQueryText(value = "", maxLength = MAX_QUERY_LENGTH) {
-  return String(value || "")
-    .replace(/[^\p{L}\p{N}\s.,:_-]/gu, "")
-    .trim()
-    .slice(0, maxLength);
-}
-
-function parseForceRefresh(req) {
-  return String(req.query.force || "0") === "1";
-}
-
-function publicFallbackError() {
-  return {
-    code: "UPSTREAM_UNAVAILABLE",
-    message: "외부 공개 API 응답이 지연되어 검증된 공식 링크 중심으로 표시합니다.",
-  };
-}
-
-function trimCacheIfNeeded() {
-  while (cache.size > MAX_CACHE_ITEMS) {
-    const key = cache.keys().next().value;
-    if (!key) break;
-    cache.delete(key);
-  }
-}
 
 function cacheGet(key, force = false) {
   if (force) return null;
@@ -61,7 +32,6 @@ function cacheGet(key, force = false) {
   return hit.value;
 }
 function cacheSet(key, value, ttlMs) {
-  trimCacheIfNeeded();
   cache.set(key, { value, expiresAt: Date.now() + ttlMs });
 }
 
@@ -98,16 +68,13 @@ function asArrayEntries(obj = {}, group = "") {
 }
 async function fetchJson(url, timeoutMs = 15000) {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), Math.min(timeoutMs, PROXY_TIMEOUT_MS));
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
       signal: ctrl.signal,
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "ldc-strategy-map-public-proxy/1.0",
-      },
+      headers: { "User-Agent": "climate-tech-platform/1.2" },
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
     return await res.json();
   } finally {
     clearTimeout(timer);
@@ -332,19 +299,14 @@ async function fetchNasaPower(lat, lon) {
   };
 }
 
-app.disable("x-powered-by");
-app.use(express.json({ limit: "64kb" }));
 app.use((_, res, next) => {
   res.setHeader("Cache-Control", "no-store");
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("Referrer-Policy", "no-referrer");
-  res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
   next();
 });
 
 app.get("/api/pipeline/v1/summary", async (req, res) => {
   const iso2 = pickIso2(req);
-  const force = parseForceRefresh(req);
+  const force = String(req.query.force || "0") === "1";
   const key = `summary:${iso2}`;
   const cached = cacheGet(key, force);
   if (cached) return res.json(cached);
@@ -374,7 +336,7 @@ app.get("/api/pipeline/v1/summary", async (req, res) => {
     res.status(200).json({
       fetchedAt: now(),
       country: iso2,
-      error: publicFallbackError(),
+      error: String(error?.message || error),
       verifiedPortals: getCountryLinks(iso2).country || {},
     });
   }
@@ -384,7 +346,7 @@ app.get("/api/live/v1/country-dashboard", async (req, res) => {
   const iso2 = pickIso2(req);
   const lat = Number(req.query.lat);
   const lon = Number(req.query.lon);
-  const force = parseForceRefresh(req);
+  const force = String(req.query.force || "0") === "1";
   const key = `live:${iso2}:${Number.isFinite(lat) ? lat.toFixed(3) : "na"}:${
     Number.isFinite(lon) ? lon.toFixed(3) : "na"
   }`;
@@ -472,16 +434,16 @@ app.get("/api/live/v1/country-dashboard", async (req, res) => {
         hasNasaPower: false,
       },
       isFallback: true,
-      error: publicFallbackError(),
+      error: String(error?.message || error),
     });
   }
 });
 
 app.get("/api/pipeline/v1/projects", async (req, res) => {
   const iso2 = pickIso2(req);
-  const region = sanitizeQueryText(req.query.region || "");
-  const theme = sanitizeQueryText(req.query.theme || "");
-  const force = parseForceRefresh(req);
+  const region = String(req.query.region || "");
+  const theme = String(req.query.theme || "");
+  const force = String(req.query.force || "0") === "1";
   const key = `projects:${iso2}:${region}:${theme}`;
   const cached = cacheGet(key, force);
   if (cached) return res.json(cached);
@@ -561,7 +523,7 @@ app.get("/api/pipeline/v1/projects", async (req, res) => {
           themeTags: [theme].filter(Boolean),
           evidence: ["Verified official link"],
         })),
-      error: publicFallbackError(),
+      error: String(error?.message || error),
       isFallback: true,
       verifiedPortals: getCountryLinks(iso2).country || {},
     });
@@ -570,7 +532,7 @@ app.get("/api/pipeline/v1/projects", async (req, res) => {
 
 app.get("/api/country/v1/profile", async (req, res) => {
   const iso2 = pickIso2(req);
-  const force = parseForceRefresh(req);
+  const force = String(req.query.force || "0") === "1";
   const key = `profile:${iso2}`;
   const cached = cacheGet(key, force);
   if (cached) return res.json(cached);
@@ -600,7 +562,7 @@ app.get("/api/country/v1/profile", async (req, res) => {
     res.status(200).json({
       fetchedAt: now(),
       country: iso2,
-      error: publicFallbackError(),
+      error: String(error?.message || error),
       profile: {
         verifiedPortals: getCountryLinks(iso2).country || {},
         officialDocumentLinks: getCountryLinks(iso2).documents || {},
@@ -614,7 +576,7 @@ app.get("/api/country/v1/profile", async (req, res) => {
 
 app.get("/api/sources/v1/documents", async (req, res) => {
   const iso2 = pickIso2(req);
-  const force = parseForceRefresh(req);
+  const force = String(req.query.force || "0") === "1";
   const key = `documents:${iso2}`;
   const cached = cacheGet(key, force);
   if (cached) return res.json(cached);
@@ -643,7 +605,7 @@ app.get("/api/sources/v1/documents", async (req, res) => {
     res.status(200).json({
       fetchedAt: now(),
       country: iso2,
-      error: publicFallbackError(),
+      error: String(error?.message || error),
       total: buildCuratedDocuments(iso2).length,
       documents: buildCuratedDocuments(iso2),
       isFallback: true,
@@ -653,7 +615,7 @@ app.get("/api/sources/v1/documents", async (req, res) => {
 
 app.get("/api/partners/v1/registry", (req, res) => {
   const iso2 = pickIso2(req);
-  const region = sanitizeQueryText(req.query.region || "");
+  const region = String(req.query.region || "");
   const partners = buildPartnerRegistry(iso2, region);
   res.json({
     fetchedAt: now(),
