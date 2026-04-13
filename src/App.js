@@ -209,7 +209,7 @@ const VIETNAM_MEKONG_PILOT_DATA = {
     },
     {
       layer: "프로젝트 파이프라인",
-      source: "Platform proxy - projects",
+      source: "플랫폼 API - projects",
       acquisition: "Server API",
       cycle: "일 1회 캐시",
       resolution: "국가/프로젝트",
@@ -218,7 +218,7 @@ const VIETNAM_MEKONG_PILOT_DATA = {
     },
     {
       layer: "공식 문서 메타데이터",
-      source: "Platform proxy - documents",
+      source: "플랫폼 API - documents",
       acquisition: "Server API",
       cycle: "일 1회 캐시",
       resolution: "국가/문서",
@@ -227,7 +227,7 @@ const VIETNAM_MEKONG_PILOT_DATA = {
     },
     {
       layer: "국가 프로필 요약",
-      source: "Platform proxy - country profile",
+      source: "플랫폼 API - country profile",
       acquisition: "Server API",
       cycle: "일 1회 캐시",
       resolution: "국가",
@@ -236,7 +236,7 @@ const VIETNAM_MEKONG_PILOT_DATA = {
     },
     {
       layer: "현지 파트너 메타데이터",
-      source: "Platform proxy - partner registry",
+      source: "플랫폼 API - partner registry",
       acquisition: "Server API",
       cycle: "주 1회",
       resolution: "국가/지역/기관",
@@ -3341,10 +3341,11 @@ function sanitizeStrategyEvidence(evidence, rec = {}) {
         label: item?.label || item?.source || `근거 데이터 ${idx + 1}`,
         group: item?.group || "기본 정보",
         source: item?.source || "출처 연계 대기 중", // '출처 연결 예정' 순화
-        mode: item?.mode || "플랫폼 연동 대기", // '탑재 예정' 순화
+        mode: item?.mode || "기본 정보", // '탑재 예정' 순화
         link: item?.link,
         description:
-          item?.description || "세부 데이터 명세 연동 대기 중입니다.", // '설명을 연결 중입니다' 순화
+          item?.description ||
+          "세부 데이터 항목을 순서대로 확인할 수 있습니다.", // '설명을 연결 중입니다' 순화
         lastUpdated: item?.lastUpdated,
         sampleFields: safeArray(item?.sampleFields),
         rows: safeArray(item?.rows),
@@ -3355,14 +3356,15 @@ function sanitizeStrategyEvidence(evidence, rec = {}) {
         if (typeof item === "string") {
           return {
             tag: item,
-            note: "검토 목적별 정합성 근거 데이터 연동 대기 중입니다.", // '추가 연결 중입니다' 순화
+            note: "검토 목적에 맞는 근거 항목을 순서대로 확인할 수 있습니다.", // '추가 연결 중입니다' 순화
             id: `purpose-${idx}`,
           };
         }
         return {
           tag: item?.tag || `목적 선택 ${idx + 1}`,
           note:
-            item?.note || "검토 목적별 정합성 근거 데이터 연동 대기 중입니다.",
+            item?.note ||
+            "검토 목적에 맞는 근거 항목을 순서대로 확인할 수 있습니다.",
           id: item?.id || `purpose-${idx}`,
         };
       }),
@@ -3383,7 +3385,7 @@ function sanitizeExecutionFeasibility(execution, rec = {}) {
         rec?.region || "대상 지역"
       }의 ${normalizeTechName(
         rec?.tech || "대상 기술" // '협력 기술' -> '대상 기술'
-      )} 협력안은 프로젝트 파이프라인 및 금융 구조 연계 대기 중입니다.`, // '추가 연결 중입니다' 순화
+      )} 협력안 검토 시 프로젝트 파이프라인과 재원 구조를 함께 확인해 주세요.`, // '추가 연결 중입니다' 순화
     financeChannels: safeArray(execution?.financeChannels),
     deliveryPartners: safeArray(execution?.deliveryPartners),
     financeNote:
@@ -3561,7 +3563,7 @@ const API_CATALOG = [
   {
     key: "vietnamPilot",
     name: "베트남 우선 탑재 데이터팩",
-    scope: "메콩 델타 재난·적응 및 프로젝트 대상지 파일럿 데이터", // '프로젝트 후보지' -> '프로젝트 대상지'
+    scope: "메콩 델타 재난·적응 및 프로젝트 대상지 대표 데이터", // '프로젝트 후보지' -> '프로젝트 대상지'
     type: "Pilot dataset",
     status: "pilot",
   },
@@ -4039,12 +4041,12 @@ function getStaticBoundaryBundle(rec) {
     : regionCenter;
 
   const regionFeature = buildRectPolygonFeature(regionCenter, 1.4, 1.0, {
-    name: `${rec.region} (fallback)`,
+    name: `${rec.region} (기본 경계)`,
     kind: "region",
     active: 1,
   });
   const countryFeature = buildRectPolygonFeature(countryCenter, 4.5, 3.3, {
-    name: `${safeRec.country} (fallback)`,
+    name: `${safeRec.country} (기본 경계)`,
     kind: "country",
   });
 
@@ -4053,7 +4055,7 @@ function getStaticBoundaryBundle(rec) {
   return {
     countryFeature: geoFeatureToFC(countryFeature),
     regionFeature: geoFeatureToFC(regionFeature),
-    source: "Local synthetic boundary fallback",
+    source: "기본 경계 데이터",
     fetchedAt: new Date().toISOString(),
     validation: {
       regionQuery: getRegionQuery(rec),
@@ -4235,7 +4237,7 @@ async function loadBoundaryBundle(rec) {
     return {
       countryFeature: normalizeNominatimFeature(countryHit, "country"),
       regionFeature: normalizeNominatimRegionFeature(regionHits, rec),
-      source: "Nominatim(OpenStreetMap) fallback",
+      source: "Nominatim(OpenStreetMap) 기본 경계",
       fetchedAt: new Date().toISOString(),
       validation: {
         regionQuery,
@@ -4327,10 +4329,10 @@ function buildPipelineFallback({
       country,
       region,
       theme,
-      source: "local-fallback",
-      statusLabel: "검증용 데이터 적용 중", // '데모 데이터 표시 중' 순화
-      note: "실시간 파이프라인 API 미연동 상태로, 검증용 데모 데이터를 제공합니다. 근거 링크 및 대상 검토 구조는 동일하게 유지됨.",
-      cachePolicy: "memory-cache / fallback",
+      source: "기본 데이터",
+      statusLabel: "기본 데이터 안내 중", // '기본 데이터 안내 중' 순화
+      note: "실시간 파이프라인 API 미연동 상태로, 검증용 기본 데이터를 제공합니다. 근거 링크 및 대상 검토 구조는 동일하게 유지됨.",
+      cachePolicy: "memory-cache / 기본 데이터",
     },
     isFallback: true,
   });
@@ -4385,11 +4387,10 @@ function normalizePipelineBundle(bundle = {}) {
       region: bundle?.summary?.region || "",
       theme: bundle?.summary?.theme || "",
       source:
-        bundle?.summary?.source ||
-        (bundle?.isFallback ? "local-fallback" : "api"),
+        bundle?.summary?.source || (bundle?.isFallback ? "기본 데이터" : "api"),
       statusLabel:
         bundle?.summary?.statusLabel ||
-        (bundle?.isFallback ? "데모 데이터 표시 중" : "실시간 데이터 연결"),
+        (bundle?.isFallback ? "기본 데이터 안내 중" : "실시간 연결"),
       note:
         bundle?.summary?.note ||
         (bundle?.isFallback
@@ -4424,10 +4425,10 @@ async function fetchPipelineBundle({
       projects: Array.isArray(json?.projects) ? json.projects : [],
       summary: {
         ...(json?.summary || {}),
-        statusLabel: "실시간 데이터 연결",
+        statusLabel: "실시간 연결",
         note:
           json?.summary?.note ||
-          "동일 출처 API에서 프로젝트·재원 후보를 불러왔습니다. 응답 실패 시에는 검증용 데모 데이터로 자동 전환됩니다.",
+          "동일 출처 API에서 프로젝트·재원 후보를 불러왔습니다. 응답 실패 시에는 검증용 기본 데이터로 자동 전환됩니다.",
         cachePolicy: force ? "force-refresh" : "same-origin cache",
       },
       isFallback: false,
@@ -4454,10 +4455,10 @@ async function fetchPipelineBundle({
           country,
           region,
           theme,
-          source: "local-fallback",
-          statusLabel: "데모 데이터 표시 중",
-          note: "실시간 파이프라인 API 응답이 없어 검증용 데모 데이터를 대신 보여줍니다. 저장·비교·상세 검토 흐름은 그대로 사용 가능.",
-          cachePolicy: "fallback + retry 1회",
+          source: "기본 데이터",
+          statusLabel: "기본 데이터 안내 중",
+          note: "실시간 파이프라인 API 응답이 없어 검증용 기본 데이터를 대신 보여줍니다. 저장·비교·상세 검토 흐름은 그대로 사용 가능.",
+          cachePolicy: "기본 데이터 + 재시도 1회",
         },
         isFallback: true,
       });
@@ -5361,13 +5362,13 @@ function buildStrategyEvidence(rec) {
         group: "위험",
         label: "홍수·침수 취약성",
         source: "재난 이력 + DEM + WRI Aqueduct(예정)",
-        mode: "파일럿",
+        mode: "대표 데이터",
       },
       {
         group: "실행",
         label: "관측망·통신망 커버리지",
         source: "정부·통신사 데이터",
-        mode: "플랫폼 연동 대기", // '탑재 예정' 순화
+        mode: "기본 정보", // '탑재 예정' 순화
       },
       {
         group: "위치",
@@ -5381,13 +5382,13 @@ function buildStrategyEvidence(rec) {
         group: "수문",
         label: "수위·유량·수질",
         source: "유역 관측망·정부 통계",
-        mode: "파일럿",
+        mode: "대표 데이터",
       },
       {
         group: "실행",
         label: "급수 취약지역·인프라 수요",
         source: "정부계획·MDB 문서",
-        mode: "플랫폼 연동 대기",
+        mode: "기본 정보",
       },
       {
         group: "위치",
@@ -5401,19 +5402,19 @@ function buildStrategyEvidence(rec) {
         group: "산업",
         label: "배출원·산업단지 분포",
         source: "국가 통계·산업지도",
-        mode: "파일럿",
+        mode: "대표 데이터",
       },
       {
         group: "저장",
         label: "저장소 탐사·평가",
         source: "Global CCS Institute·지질조사기관",
-        mode: "플랫폼 연동 대기",
+        mode: "기본 정보",
       },
       {
         group: "정책",
         label: "감축인증·인허가 요건",
         source: "국가 정책 문서",
-        mode: "플랫폼 연동 대기",
+        mode: "기본 정보",
       },
     ],
     "맹그로브/산림 생태계 복원": [
@@ -5421,13 +5422,13 @@ function buildStrategyEvidence(rec) {
         group: "자연기반",
         label: "산림훼손 핫스팟",
         source: "위성 지도 모니터링",
-        mode: "파일럿",
+        mode: "대표 데이터",
       },
       {
         group: "MRV",
         label: "토지권·탄소크레딧 경로",
         source: "정부·법제 문서",
-        mode: "플랫폼 연동 대기",
+        mode: "기본 정보",
       },
       {
         group: "위치",
@@ -5441,19 +5442,19 @@ function buildStrategyEvidence(rec) {
         group: "수요",
         label: "폐기물 발생량·성상",
         source: "지자체 통계",
-        mode: "파일럿",
+        mode: "대표 데이터",
       },
       {
         group: "사업",
         label: "처리시설 입지·운영현황",
         source: "지자체 + 위성 지도",
-        mode: "파일럿",
+        mode: "대표 데이터",
       },
       {
         group: "재원",
         label: "PPP·Offtake 필터",
         source: "정책·계약 문서",
-        mode: "플랫폼 연동 대기",
+        mode: "기본 정보",
       },
     ],
   };
@@ -5481,7 +5482,7 @@ function buildStrategyEvidence(rec) {
             group: "기본",
             label: "국가지표·좌표·정책 문서",
             source: "World Bank / OSM / 정책문서",
-            mode: "파일럿",
+            mode: "대표 데이터",
           },
         ],
     },
@@ -5872,9 +5873,9 @@ function buildExecutionFeasibility(rec) {
 
   const countryMap = {
     베트남: {
-      stage: "우선 파일럿 국가",
+      stage: "우선 검토 국가",
       projectSignal:
-        "메콩 델타 적응 및 재난 대응 수요가 명확하여 초기 파일럿 대상으로 최적화됨", // '뚜렷하여', '좋은' 순화
+        "메콩 델타 적응 및 재난 대응 수요가 명확하여 초기 검토 대상으로 최적화됨", // '뚜렷하여', '좋은' 순화
       financeChannels: ["ODA", "ADB", "World Bank", "GCF"],
       deliveryPartners: actualPartners.map((item) => item.name),
       financeNote: "공공 재원, 시범 사업 재원 및 디지털 인프라 연계 우선 검토",
@@ -5893,7 +5894,7 @@ function buildExecutionFeasibility(rec) {
     stage: safeArray(rec?.purposeTags).includes("ODA")
       ? "공공협력 우선 검토"
       : "실행 목적 적합도 검토 단계",
-    projectSignal: `${safeRec.tech} 협력 수요는 확인되나, 프로젝트 파이프라인 및 금융 구조 데이터 플랫폼 연동 대기 중입니다.`, // '탑재가 필요합니다' -> 시스템 상태
+    projectSignal: `${safeRec.tech} 협력 수요는 확인되나, 프로젝트 파이프라인 및 금융 구조 데이터 기본 정보 중입니다.`, // '탑재가 필요합니다' -> 시스템 상태
     financeChannels: safeArray(rec?.purposeTags).includes("ODA")
       ? ["ODA", "MDB"]
       : ["민간투자", "개발금융"],
@@ -6168,7 +6169,7 @@ const COUNTRY_DATA_ENRICHMENTS = {
         resolution: "국가/프로젝트",
         endpoint:
           "https://documents.worldbank.org/en/publication/documents-reports/documentdetail/099120624085033937",
-        note: "기후 회복력 및 수자원 관리 부문 실행 구조 벤치마킹", // '참고' -> '벤치마킹' 전문화
+        note: "기후 회복력 및 수자원 관리 부문 실행 사례 참고", // '참고' -> '벤치마킹' 전문화
       },
     ],
     regionRows: [
@@ -8454,7 +8455,7 @@ const SCENARIO_WORKFLOWS = {
     when: "플랫폼 첫 진입 시 지도·후보·상세 패널이 어떻게 연결되는지 빠르게 확인할 때 사용합니다.",
     deliverable: "기본 검토 메모",
     pilotNote:
-      "대표 예시는 베트남 메콩델타 파일럿 데이터입니다. 국가 전용 화면이 아니라 확장 가능한 전략지도 구조를 먼저 익히는 흐름입니다.",
+      "대표 예시는 베트남 메콩델타 데이터입니다. 국가 전용 화면이 아니라 확장 가능한 전략지도 구조를 먼저 익히는 흐름입니다.",
     preset: STRATEGY_PRESETS.overview,
     steps: [
       {
@@ -8521,7 +8522,7 @@ const SCENARIO_WORKFLOWS = {
     when: "대상을 3~5개로 선별하여 내부 검토용 초안을 작성할 때 활용합니다.",
     deliverable: "우선협력 후보",
     pilotNote:
-      "현재는 베트남 메콩델타 파일럿 데이터가 가장 풍부하게 연결되어 있어 대표 예시로 바로 시연할 수 있습니다.",
+      "현재는 베트남 메콩델타 대표 데이터가 가장 풍부하게 연결되어 있어 전체 구조를 빠르게 확인하기 좋습니다.",
     preset: STRATEGY_PRESETS["oda-screening"],
     steps: [
       {
@@ -9334,7 +9335,7 @@ function buildVietnamSpecificStrategy(rec, pipelineData = null) {
         ? `연결 가능한 프로젝트·재원 후보 ${mergedPipeline.length}건`
         : "프로젝트 파이프라인은 아직 제한적",
       protocolRows.length
-        ? `경보 프로토콜 샘플 ${protocolRows.length}건 구조화`
+        ? `경보 프로토콜 예시 ${protocolRows.length}건 구조화`
         : "프로토콜 데이터 추가 확보 필요",
     ],
     flagshipProject: {
@@ -12874,7 +12875,7 @@ function SourceDrillDownModal({ open, item, onClose }) {
                 </div>
               </div>
               <div>
-                <div className="text-xs text-slate-400">샘플 필드</div>
+                <div className="text-xs text-slate-400">예시 필드</div>
                 <div className="mt-1 text-sm text-slate-100">
                   {(item.sampleFields || []).join(", ") || "-"}
                 </div>
@@ -12885,7 +12886,7 @@ function SourceDrillDownModal({ open, item, onClose }) {
           {!!sampleRows.length && (
             <div className="rounded-2xl border border-slate-700 bg-slate-900/70 overflow-hidden">
               <div className="border-b border-slate-800 px-4 py-3 text-sm font-bold text-white">
-                샘플 데이터
+                예시 데이터
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
@@ -12977,7 +12978,7 @@ function StrategyEvidenceCard({ rec, onOpenSources, onOpenDrillDown }) {
                       {item.group} · {item.source}
                     </div>
                     <div className="mt-2 text-xs text-emerald-300">
-                      클릭하면 데이터 구조와 샘플값을 볼 수 있습니다.
+                      클릭하면 데이터 구조와 예시 값을 볼 수 있습니다.
                     </div>
                   </button>
                   <div className="shrink-0 flex flex-col items-end gap-2">
@@ -12985,7 +12986,7 @@ function StrategyEvidenceCard({ rec, onOpenSources, onOpenDrillDown }) {
                       tone={
                         item.mode === "연계중"
                           ? "emerald"
-                          : item.mode === "파일럿"
+                          : item.mode === "대표 데이터"
                           ? "blue"
                           : "amber"
                       }
@@ -13007,7 +13008,7 @@ function StrategyEvidenceCard({ rec, onOpenSources, onOpenDrillDown }) {
         ) : (
           <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/45 px-3 py-3 text-xs text-slate-400">
             연결된 세부 근거 데이터가 아직 없습니다. 정책·프로젝트·좌표 데이터
-            스키마를 순차적으로 탑재하도록 설계되어 있습니다.
+            구조가 정리되면 이 영역에 표시됩니다.
           </div>
         )}
       </div>
@@ -13024,7 +13025,7 @@ function StrategyEvidenceCard({ rec, onOpenSources, onOpenDrillDown }) {
           ))
         ) : (
           <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900/45 px-3 py-2 text-xs text-slate-400">
-            목적 선택 정합성 메모를 추가 연결 중입니다.
+            목적 정합성 메모가 준비되면 여기에 표시됩니다.
           </div>
         )}
       </div>
@@ -13517,7 +13518,7 @@ function ScenarioWorkflowCard({
             onClick={() => safeInvoke(onStartScenario, workflow.key)}
             className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-200"
           >
-            현재 목적 선택 다시 정렬
+            현재 목적 다시 적용
           </button>
           <button
             type="button"
@@ -13537,7 +13538,7 @@ function ScenarioWorkflowCard({
 function UsageScenarioPanel({ compact = false, onStartScenario = null }) {
   return (
     <SectionCard
-      title={compact ? "목적 선택" : "업무 목적별 시나리오"}
+      title={compact ? "목적 선택" : "목적별 시작 흐름"}
       icon={<BookOpen className="text-sky-300" size={16} />}
       right={<PillTag tone="sky">{PLATFORM_USAGE_SCENARIOS.length}개</PillTag>}
     >
@@ -13665,7 +13666,7 @@ function UsageScenarioPanel({ compact = false, onStartScenario = null }) {
                 onClick={() => safeInvoke(onStartScenario, item.key)}
                 className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-900/85 px-3 py-2.5 text-sm font-semibold text-white hover:border-emerald-500/30 hover:bg-slate-800"
               >
-                이 목적 적용
+                이 흐름으로 시작
               </button>
             </div>
           );
@@ -13683,7 +13684,7 @@ function RoleBasedWorkflowCard({
 }) {
   return (
     <SectionCard
-      title={compact ? "목적 선택" : "검토 목적을 선택해 주세요."}
+      title={compact ? "목적 선택" : "목적을 선택해 주세요."}
       icon={<Zap className="text-amber-300" size={16} />}
       right={<PillTag tone="amber">바로 시작</PillTag>}
     >
@@ -14093,11 +14094,9 @@ function ScenarioTesterModal({
       <div className="w-full max-w-3xl overflow-hidden rounded-[28px] border border-slate-700 bg-slate-900 shadow-2xl">
         <div className="flex items-center justify-between gap-2 border-b border-slate-800 px-5 py-4">
           <div>
-            <div className="text-sm font-black text-white">
-              목적 선택 버튼 테스트
-            </div>
+            <div className="text-sm font-black text-white">목적 선택 점검</div>
             <div className="mt-1 text-xs text-slate-400">
-              ‘이 목적 적용’ 버튼이 프리셋(필터/탭/패널/후보)을 올바르게
+              ‘이 흐름으로 시작’ 버튼이 프리셋(필터/탭/패널/후보)을 올바르게
               적용하는지 자동 점검합니다.
             </div>
           </div>
@@ -14125,7 +14124,7 @@ function ScenarioTesterModal({
               disabled={running}
               className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-sm font-black text-white hover:bg-emerald-400 disabled:opacity-60"
             >
-              {running ? "테스트 실행 중…" : "테스트 실행"}
+              {running ? "점검 실행 중…" : "점검 실행"}
             </button>
           </div>
 
@@ -14212,13 +14211,13 @@ function ConnectionReadinessCard({
     ? {
         label: "연결 대기",
         tone: "slate",
-        note: "아직 파이프라인 API를 조회하지 않았습니다.",
+        note: "필요할 때 파이프라인 정보를 불러와 표시합니다.",
       }
     : pipelineData?.isFallback
     ? {
-        label: "데모 데이터",
+        label: "기본 데이터",
         tone: "amber",
-        note: "실시간 응답 실패 시 검증용 기본 데이터를 함께 보여줍니다.",
+        note: "실시간 응답이 없는 항목은 기본 제공 데이터를 함께 보여줍니다.",
       }
     : {
         label: "실시간 연결",
@@ -14756,7 +14755,7 @@ function buildSourceIntegrityRows(
       status: pipelineData?.projects?.length
         ? `${pipelineData.projects.length}건`
         : pipelineData?.isFallback
-        ? "fallback 사용 중"
+        ? "기본 데이터 사용 중"
         : "미조회",
       note: pipelineData?.isFallback
         ? "실시간 파이프라인이 없을 때도 검증된 포털 링크를 유지"
@@ -14784,7 +14783,7 @@ function SourceIntegrityBoardCard({
     <SectionCard
       title="근거·데이터 상태판"
       icon={<ShieldAlert className="text-emerald-300" size={16} />}
-      right={<PillTag tone="blue">live / fallback 구분</PillTag>}
+      right={<PillTag tone="blue">연결 상태</PillTag>}
     >
       <div className="mb-3 rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2 text-[11px] leading-relaxed text-slate-300">
         추천과 검증된 사실을 섞어 보지 않도록, 현재 후보의 데이터 상태를{" "}
@@ -14851,7 +14850,7 @@ function buildDecisionEvidenceRows(
     pipelineData?.projects?.length
       ? `프로젝트·재원 신호 ${pipelineData.projects.length}건`
       : pipelineData?.isFallback
-      ? "프로젝트·재원은 검증된 fallback 링크 중심"
+      ? "프로젝트·재원은 기본 제공 링크 중심"
       : "프로젝트·재원 신호 추가 확인 필요"
   );
 
@@ -15041,11 +15040,7 @@ function LandingPage({
   onResumeLastSession = null,
   onResumeShortlist = null,
 }) {
-  const quickStartSteps = [
-    "업무 목적 선택",
-    "협력 대상 선별",
-    "근거 및 파트너 정보 확인·공유",
-  ];
+  const quickStartSteps = ["목적 선택", "후보 선별", "근거 확인·공유"];
 
   const heroHighlights = [
     {
@@ -15097,7 +15092,7 @@ function LandingPage({
       presetKey: "purpose-selection",
     });
     focusPurposeSection(
-      "아래에서 업무 목적을 고르면 바로 검토를 시작할 수 있습니다."
+      "아래에서 목적을 선택하면 바로 검토를 시작할 수 있습니다."
     );
   }, [focusPurposeSection, onTrackHeroPrimaryStart]);
 
@@ -15231,7 +15226,7 @@ function LandingPage({
                     onClick={() => safeInvoke(onStart, "overview")}
                     className="inline-flex min-h-[52px] items-center justify-center rounded-2xl border border-slate-600 bg-slate-950/80 px-5 py-3 text-sm font-semibold text-slate-100"
                   >
-                    기본 화면 보기
+                    전체 화면 보기
                   </button>
                 </div>
               </div>
@@ -15242,7 +15237,7 @@ function LandingPage({
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="text-xs font-black uppercase tracking-[0.16em] text-amber-300">
-                          최근 작업
+                          최근 작업 이어보기
                         </div>
                         <div className="mt-2 text-lg font-extrabold text-white">
                           {safeResumeState.activeRecLabel || "최근 검토 후보"}
@@ -15257,13 +15252,13 @@ function LandingPage({
                       {safeResumeState.nextActionLabel ||
                         "마지막으로 검토하던 후보국과 저장 후보국 목록을 바로 이어서 작업할 수 있습니다."}
                     </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
                       <button
                         type="button"
                         onClick={() => safeInvoke(onResumeLastSession)}
                         className="inline-flex min-h-[48px] items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-200"
                       >
-                        최근 검토 이어 보기
+                        최근 검토 이어가기
                       </button>
                       {resumeShortlistCount ? (
                         <button
@@ -15271,7 +15266,7 @@ function LandingPage({
                           onClick={() => safeInvoke(onResumeShortlist)}
                           className="inline-flex min-h-[48px] items-center justify-center rounded-2xl border border-slate-600 bg-slate-900 px-4 py-3 text-sm font-semibold text-slate-100"
                         >
-                          저장 후보 다시 보기
+                          보관 후보 보기
                         </button>
                       ) : null}
                     </div>
@@ -15342,13 +15337,13 @@ function LandingPage({
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
               <div className="text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
-                업무 목적 선택
+                목적 선택
               </div>
               <div className="mt-2 text-2xl font-extrabold text-white sm:text-[2rem]">
-                어떤 업무를 진행하시겠습니까?
+                지금 필요한 검토 흐름을 선택해 주세요.
               </div>
               <div className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
-                업무 목적을 선택하면 맞춤형 화면이 구성됩니다.
+                목적에 맞는 화면과 필터가 바로 적용됩니다.
               </div>
             </div>
 
@@ -15363,25 +15358,9 @@ function LandingPage({
                 onClick={() => safeInvoke(onStart, "overview")}
                 className="inline-flex min-h-[50px] items-center justify-center rounded-2xl border border-slate-600 bg-slate-950 px-4 py-3 text-sm font-semibold text-slate-100"
               >
-                기본 화면 보기
+                전체 화면 보기
               </button>
             </div>
-          </div>
-
-          <div className="mt-6 grid gap-2 rounded-[24px] border border-slate-800/80 bg-slate-950/45 p-3 sm:grid-cols-3">
-            {quickStartSteps.map((step, index) => (
-              <div
-                key={`purpose-step-${step}`}
-                className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 px-3 py-3"
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-500/25 bg-emerald-500/10 text-sm font-black text-emerald-200">
-                  {index + 1}
-                </div>
-                <div className="min-w-0 text-sm font-semibold text-slate-100">
-                  {step}
-                </div>
-              </div>
-            ))}
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-12">
@@ -15903,7 +15882,7 @@ function DesktopCollapsedRail({ side = "left", title, icon, onExpand }) {
 function buildCandidateActivationReasons(rec, strategyMeta = {}) {
   const safeRec = sanitize검토Record(rec) || EMPTY_DETAIL_RECORD;
   const reasons = [];
-  if (safeRec?.pilotStatus) reasons.push("베트남 파일럿 데이터");
+  if (safeRec?.pilotStatus) reasons.push("베트남 대표 데이터");
   if (Number(safeRec?.scores?.coverage || 0) >= 85)
     reasons.push(
       `데이터 준비도 ${Math.round(Number(safeRec?.scores?.coverage || 0))}%`
@@ -16078,7 +16057,7 @@ function ResumeWorkspaceCard({
     "최근 검토 기준";
   return (
     <SectionCard
-      title="최근 작업 이어 보기"
+      title="최근 작업 이어보기"
       icon={<BookOpen className="text-amber-300" size={16} />}
       right={<PillTag tone="amber">{updatedLabel}</PillTag>}
     >
@@ -16087,7 +16066,7 @@ function ResumeWorkspaceCard({
           {resumeState?.activeRecLabel || "최근 검토 후보"}
         </div>
         <div className="mt-1 text-xs text-slate-300">
-          {scenarioLabel} · shortlist {shortlistCount}건
+          {scenarioLabel} · 보관 후보 {shortlistCount}건
         </div>
         <div className="mt-2 text-xs leading-relaxed text-slate-300">
           {resumeState?.nextActionLabel ||
@@ -16105,7 +16084,7 @@ function ResumeWorkspaceCard({
           onClick={() => safeInvoke(onResumeLastSession)}
           className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm font-semibold text-amber-200"
         >
-          최근 검토 이어 보기
+          최근 검토 이어가기
         </button>
         {shortlistCount ? (
           <button
@@ -16113,7 +16092,7 @@ function ResumeWorkspaceCard({
             onClick={() => safeInvoke(onResumeShortlist)}
             className="rounded-xl border border-slate-600 bg-slate-900 px-3 py-2.5 text-sm font-semibold text-slate-100"
           >
-            저장 후보국 다시 보기
+            보관 후보 보기
           </button>
         ) : null}
       </div>
@@ -16189,7 +16168,7 @@ function Desktop탐색Panel({
     {
       key: "shortlist",
       label: "3. 보관·공유",
-      desc: "shortlist와 공유 준비를 따로 관리",
+      desc: "보관 후보와 공유 준비를 따로 관리",
       accent: "amber",
     },
     {
@@ -16248,7 +16227,7 @@ function Desktop탐색Panel({
             </div>
             <div className="mt-3 rounded-xl border border-slate-700 bg-slate-950/45 px-3 py-2 text-[11px] leading-relaxed text-slate-300">
               국제협력 실무에서는 “목적 → 기술 → 후보 → 근거·재원·파트너” 순서가
-              가장 빠릅니다. 오늘 탭에서는 현재 필터와 shortlist 상태를 먼저
+              가장 빠릅니다. 오늘 탭에서는 현재 필터와 보관 후보 상태를 먼저
               정리합니다.
             </div>
             {activeRec && (
@@ -21618,14 +21597,14 @@ function 검토PanelContent({
                       className="rounded-xl border border-slate-700 bg-slate-800/35 p-3 text-sm text-slate-200"
                     >
                       <div className="text-xs font-bold text-emerald-300 mb-1">
-                        Why now {idx + 1}
+                        지금 검토해야 하는 이유 {idx + 1}
                       </div>
                       {item}
                     </div>
                   ))
                 ) : (
                   <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/45 px-3 py-3 text-xs text-slate-400">
-                    근거 자료 계획을 추가 연결 중입니다.
+                    표시할 근거 자료가 정리되면 여기에 표시됩니다.
                   </div>
                 )}
               </div>
@@ -21878,7 +21857,7 @@ function 검토PanelContent({
                 </div>
                 {!!strategySynthesis.protocolSummary?.length && (
                   <div className="mt-3 text-xs text-slate-400">
-                    프로토콜 샘플:{" "}
+                    프로토콜 예시:{" "}
                     {strategySynthesis.protocolSummary.join(" / ")}
                   </div>
                 )}
@@ -22243,7 +22222,7 @@ function 검토PanelContent({
                       {api.status === "active"
                         ? "연계중"
                         : api.status === "pilot"
-                        ? "파일럿"
+                        ? "대표 데이터"
                         : "다음 단계"}
                     </PillTag>
                   </div>
@@ -22300,7 +22279,7 @@ function 검토PanelContent({
                 ))
               ) : (
                 <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/45 px-3 py-3 text-xs text-slate-400">
-                  근거 자료 계획을 추가 연결 중입니다.
+                  표시할 근거 자료가 정리되면 여기에 표시됩니다.
                 </div>
               )}
             </div>
@@ -23987,7 +23966,7 @@ function AppShell({ ctisDataset = CTIS_VISIBLE_SEED_DATA }) {
       const preset = STRATEGY_PRESETS[key];
       const problems = [];
 
-      // simulate clicking “이 목적 적용”
+      // simulate clicking “이 흐름으로 시작”
       startScenarioFlow(key);
       await waitUntilApplied();
       await waitFrame();
@@ -25590,14 +25569,6 @@ function AppShell({ ctisDataset = CTIS_VISIBLE_SEED_DATA }) {
         "--right-panel-w": __rightPanelW,
       }}
     >
-      <ScenarioTesterModal
-        open={scenarioTesterOpen}
-        running={scenarioTesterRunning}
-        results={scenarioTesterResults}
-        onRun={runScenarioTester}
-        onClose={() => setScenarioTesterOpen(false)}
-      />
-
       {/* Map */}
       <MapCanvas
         ready={isReady}
@@ -27367,7 +27338,6 @@ function validateCtisDataset(data) {
 const CTIS_BOOTSTRAP_PUBLIC_PATHS = [
   "/ctis_admin_published.json",
   "/ctis_visible_site_dataset.json",
-  "/ctis_admin_seed_dataset.sample.json",
 ];
 
 function mergeCtisDataset(base, incoming, strategy = "merge") {
